@@ -51,7 +51,7 @@ spec:
         CI = 'true'
         IMAGE_TAG = "${BUILD_NUMBER}"
         PIPELINE_NAME = "${env.JOB_NAME}"
-        REACT_APP_API_URL = 'http://192.168.88.133:30002'
+        REACT_APP_API_URL = 'http://192.168.13.128:30002'
     }
     stages {
         stage('Check npm and install git') {
@@ -80,7 +80,7 @@ spec:
         //             checkout scmGit(
         //                 branches: [[name: '*/main']],
         //                 userRemoteConfigs: [[
-        //                     url: 'https://github.com/NHongCuong/SmashShop.git',
+        //                     url: 'https://github.com/billgates00s/SmashShop.git',
         //                     credentialsId: 'githubtoken'
         //                 ]]
         //             )
@@ -93,7 +93,7 @@ spec:
                 checkout scmGit(
                     branches: [[name: '*/main']],
                     userRemoteConfigs: [[
-                        url: 'https://github.com/NHongCuong/SmashShop.git',
+                        url: 'https://github.com/billgates00s/SmashShop.git',
                         credentialsId: 'github-token' 
                     ]]
                 )
@@ -136,7 +136,7 @@ spec:
                 //                     sh """
                 //                         $SCANNER_HOME/bin/sonar-scanner \
                 //                         -Dsonar.projectKey=smash-shop-frontend-project \
-                //                         -Dsonar.host.url=http://192.168.88.133:31000/ \
+                //                         -Dsonar.host.url=http://192.168.13.128:31000/ \
                 //                         -Dsonar.login=$SONAR_AUTH_TOKEN
                 //                     """
                 //                 }
@@ -157,7 +157,7 @@ spec:
                                                 ${scannerHome}/bin/sonar-scanner \
                                                 -Dsonar.projectKey=smash-shop-frontend-project \
                                                 -Dsonar.sources=. \
-                                                -Dsonar.host.url=http://192.168.88.133:31000/ \
+                                                -Dsonar.host.url=http://192.168.13.128:31000/ \
                                             """
                                         }
                                     }
@@ -233,7 +233,7 @@ spec:
                         sh '''#!/busybox/sh
                             /kaniko/executor \
                               --context `pwd` \
-                              --destination nhongcuong/smash-shop-frontend-image:$IMAGE_TAG \
+                              --destination nhannh/smash-shop-frontend-image:$IMAGE_TAG \
                               --build-arg REACT_APP_API_URL=$REACT_APP_API_URL \
                               --cache=true
                         '''
@@ -250,7 +250,7 @@ spec:
                             trivy image --no-progress --severity MEDIUM,HIGH,CRITICAL \
                                         --scanners vuln,secret \
                                         --skip-files ".npm/_cacache" \
-                                        --timeout 10m nhongcuong/smash-shop-frontend-image:$IMAGE_TAG > trivy-image.txt
+                                        --timeout 10m nhannh/smash-shop-frontend-image:$IMAGE_TAG > trivy-image.txt
                             cat trivy-image.txt
                         '''
                         sh '''
@@ -276,11 +276,11 @@ spec:
         //                     rm -rf smash-shop-k8s-mainfest
         //                     git clone https://github.com/NHongCuong/smash-shop-k8s-mainfest.git
         //                     cd smash-shop-k8s-mainfest/k8s-manifests/frontend
-        //                     sed -i.bak "s|nhongcuong/smash-shop-frontend-image:.*|nhongcuong/smash-shop-frontend-image:$IMAGE_TAG|" deployment.yaml
+        //                     sed -i.bak "s|nhannh/smash-shop-frontend-image:.*|nhannh/smash-shop-frontend-image:$IMAGE_TAG|" deployment.yaml
         //                     git config user.email "nguyenhongnhana2@gmail.com"
         //                     git config user.name "billgates00s"
         //                     git add deployment.yaml
-        //                     git commit -m "Update image to nhongcuong/smash-shop-frontend:$IMAGE_TAG"
+        //                     git commit -m "Update image to nhannh/smash-shop-frontend:$IMAGE_TAG"
         //                     git push https://$GIT_TOKEN@github.com/NHongCuong/smash-shop-k8s-mainfest.git HEAD:main
         //                 '''
         //             }
@@ -300,15 +300,15 @@ spec:
                                     if ! command -v git >/dev/null; then apk add --no-cache git; fi
 
                                     rm -rf smash-shop-k8s-mainfest
-                                    #git clone https://${GIT_TOKEN}@github.com/NHongCuong/smash-shop-k8s-mainfest.git
-                                    git clone https://github.com/NHongCuong/smash-shop-k8s-mainfest.git
+                                    #git clone https://${GIT_TOKEN}@github.com/billgates00s/smash-shop-k8s-mainfest.git
+                                    git clone https://github.com/billgates00s/smash-shop-k8s-mainfest.git
                                     cd smash-shop-k8s-mainfest/k8s-manifests/frontend
 
                                     # Cập nhật tag image
-                                    sed -i.bak "s|nhongcuong/smash-shop-frontend-image:.*|nhongcuong/smash-shop-frontend-image:$IMAGE_TAG|" deployment.yaml
+                                    sed -i.bak "s|nhannh/smash-shop-frontend-image:.*|nhannh/smash-shop-frontend-image:$IMAGE_TAG|" deployment.yaml
 
-                                    git config user.email "nguyenhongcuonga1@gmail.com"
-                                    git config user.name "NHongCuong"
+                                    git config user.email "nguyenhongnhana2@gmail.com"
+                                    git config user.name "billgates00s"
                                     git add deployment.yaml
 
                                     if git diff --cached --quiet; then
@@ -316,8 +316,8 @@ spec:
                                     else
                                         #git commit -m "Update image to version ${IMAGE_TAG}"
                                         #git push origin main
-                                        git commit -m "Update image to nhongcuong/smash-shop-frontend:$IMAGE_TAG"
-                                        git push https://$GIT_TOKEN@github.com/NHongCuong/smash-shop-k8s-mainfest.git HEAD:main
+                                        git commit -m "Update image to nhannh/smash-shop-frontend:$IMAGE_TAG"
+                                        git push https://$GIT_TOKEN@github.com/billgates00s/smash-shop-k8s-mainfest.git HEAD:main
                                     fi
                                 """
                             }
@@ -337,8 +337,14 @@ spec:
                             curl -sSL -o argocd-linux-amd64 https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64
                             install -m 555 argocd-linux-amd64 /usr/local/bin/argocd
                             rm argocd-linux-amd64
-                            argocd login argocd-server.argocd.svc.cluster.local:443 --username admin --password $ARGOCD_TOKEN --insecure
-                            argocd app sync smash-shop-frontend
+                            #argocd login argocd-server.argocd.svc.cluster.local:443 --username admin --password $ARGOCD_TOKEN --insecure
+                            #argocd app sync smash-shop-frontendargocd 
+							app sync smash-shop-backend \
+                                --server argocd-server.argocd.svc.cluster.local:443 \
+                                --auth-token ${ARGOCD_TOKEN} \
+                                --insecure \
+                                --prune
+							
                          '''
                      }
                  }
