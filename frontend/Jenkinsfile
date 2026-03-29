@@ -152,7 +152,7 @@ spec:
                                 script {
                                     def scannerHome = tool 'sonarqube'
                                     dir('frontend') {
-                                        withSonarQubeEnv(credentialsId: 'sonarqube-token',installationName: 'sonarqube') {
+                                        withSonarQubeEnv(credentialsId: 'sonarqube-token', installationName: 'sonarqube') {
                                             sh """
                                                 ${scannerHome}/bin/sonar-scanner \
                                                 -Dsonar.projectKey=smash-shop-frontend-project \
