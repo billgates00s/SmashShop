@@ -359,13 +359,13 @@ spec:
             emailext attachLog: true, 
                      body: "The pipeline '${PIPELINE_NAME} Build #${BUILD_NUMBER}' has completed successfully.", 
                      subject: "Pipeline Success: ${PIPELINE_NAME} - Build #${BUILD_NUMBER}", 
-                     to: 'testkunnguyen@gmail.com'
+                     to: 'nhannh1013@gmail.com'
         }
         failure {
             emailext attachLog: true, 
                      body: "The pipeline '${PIPELINE_NAME}' has failed. Please review the attached logs.", 
                      subject: "Pipeline Failed: ${PIPELINE_NAME} - Build #${BUILD_NUMBER}", 
-                     to: 'testkunnguyen@gmail.com'
+                     to: 'nhannh1013@gmail.com'
         }
     }
 }
