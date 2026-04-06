@@ -270,8 +270,8 @@ spec:
                             git config user.name "billgates00s"
                             git add deployment.yaml
                             git commit -m "Update image to nhannh/smash-shop-backend-image:$IMAGE_TAG"
-                            #git push https://$GIT_TOKEN@github.com/billgates00s/smash-shop-k8s-mainfest.git HEAD:main
-							git push "https://${GIT_TOKEN}@github.com/billgates00s/smash-shop-k8s-mainfest.git" HEAD:main
+                            git push https://$GIT_TOKEN@github.com/billgates00s/smash-shop-k8s-mainfest.git HEAD:main
+							#git push "https://${GIT_TOKEN}@github.com/billgates00s/smash-shop-k8s-mainfest.git" HEAD:main
                         '''
                     }
                 }
