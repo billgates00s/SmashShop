@@ -45,7 +45,7 @@ app.use(passport.session());
 
 // Middleware
 app.use(cors({
-    origin: ["https://192.168.13.128:30443", "http://192.168.13.128:30002"], // KHÔNG được dùng '*'
+    origin: ["https://192.168.13.128:30444", "http://192.168.13.128:30002"], // KHÔNG được dùng '*'
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     credentials: true, // Cho phép gửi cookie/session
     allowedHeaders: ["Content-Type", "Authorization"]
