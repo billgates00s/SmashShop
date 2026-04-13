@@ -39,7 +39,7 @@ ENV NODE_ENV=production
 COPY --from=build /app /app
 
 # Expose port
-EXPOSE 30003
+EXPOSE 5001
 
 # Start servera
 CMD ["npm", "start"]
