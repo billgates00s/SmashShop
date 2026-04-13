@@ -22,7 +22,7 @@ import paymentRoutes from "./routes/payment.route.js";
 
 dotenv.config();
 
-const PORT = process.env.PORT || 5001;
+const PORT = process.env.PORT || 30003;
 const FRONTEND_URL = process.env.FRONTEND_URL || "https://smashshop.svuit.org";
 const FRONTEND_URL_VERCEL = process.env.FRONTEND_URL_VERCEL || "https://ie-213.vercel.app";
 connectDB();
