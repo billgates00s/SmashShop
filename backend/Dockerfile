@@ -35,6 +35,7 @@ RUN mkdir -p /home/appuser /app && \
 WORKDIR /app
 
 ENV NODE_ENV=production
+ENV PORT=5001
 
 COPY --from=build /app /app
 
