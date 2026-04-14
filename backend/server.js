@@ -86,6 +86,6 @@ app.use('*', (req, res) => {
 });
 
 
-app.listen(PORT, () => console.log(`Server started at http://192.168.13.128:${PORT}`));
+app.listen(PORT, '0.0.0.0', () => console.log(`Server started and listening on port ${PORT}`));
 
 export default app;
