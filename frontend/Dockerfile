@@ -9,7 +9,7 @@ RUN addgroup --system appgroup && \
 RUN mkdir -p /home/appuser /app && \
     chown -R appuser:appgroup /home/appuser /app
 # Nhận biến môi trường từ build args
-ARG REACT_APP_API_URL
+ARG REACT_APP_API_URL=/api
 ENV REACT_APP_API_URL=$REACT_APP_API_URL
 
 WORKDIR /app
