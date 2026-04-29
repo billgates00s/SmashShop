@@ -35,19 +35,19 @@ export default function Cart() {
     for (let field of requiredShippingFields) {
       if (!formData[field]) {
         Swal.fire({
-                  icon: 'failure',
-                  title: `Vui lòng nhập đầy đủ thông tin`,
-                  showConfirmButton: false,
-                  timer: 1000
-                });
+          icon: 'error',
+          title: `Vui lòng nhập đầy đủ thông tin`,
+          showConfirmButton: false,
+          timer: 1000
+        });
         return;
       }
     }
-  
+
     // Check if the cart is empty
     if (cartItems.length === 0) {
       Swal.fire({
-        icon: 'failure',
+        icon: 'error',
         title: "Giỏ hàng của bạn đang trống. Vui lòng thêm sản phẩm vào giỏ.",
         showConfirmButton: false,
         timer: 1000
@@ -71,7 +71,7 @@ export default function Cart() {
     if (paymentMethod === 'cod') {
       dispatch(createOrderThunk(orderData));
       Swal.fire({
-        icon: 'failure',
+        icon: 'success',
         title: "Đơn hàng của bạn đã được đặt thành công.",
         showConfirmButton: false,
         timer: 1000
@@ -79,7 +79,7 @@ export default function Cart() {
       navigate('/');
     } else if (paymentMethod === 'vnpay') {
       try {
-        const res = await fetch("https://smashshop.svuit.org/api/v1/vnpay/create_payment", {
+        const res = await fetch("http://localhost:5001/api/v1/vnpay/create_payment", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -90,8 +90,8 @@ export default function Cart() {
         const data = await res.json();
         if (data.paymentUrl) {
           localStorage.setItem("shippingInfo", JSON.stringify(formData));
-          localStorage.setItem("cartItems", JSON.stringify(items));
-          
+          localStorage.setItem("cartItems", JSON.stringify(cartItems));
+
           window.location.href = data.paymentUrl;
         } else {
           alert("Không thể tạo thanh toán online.");
@@ -105,7 +105,7 @@ export default function Cart() {
 
   return (
     <>
-      <Header  />
+      <Header />
 
       <div className="user-container">
         <div className="user-header-container">
@@ -126,31 +126,31 @@ export default function Cart() {
             ))}
 
             <div className="payment-method">
-                <p className="payment-method-title">Phương thức thanh toán:</p>
+              <p className="payment-method-title">Phương thức thanh toán:</p>
+              <div>
                 <div>
-                    <div>
-                        <input
-                            type="radio"
-                            id="cod"
-                            name="paymentMethod"
-                            value="cod"
-                            checked={paymentMethod === 'cod'}
-                            onChange={() => setPaymentMethod('cod')}
-                        />
-                        <label htmlFor="cod">Thanh toán khi nhận hàng</label>
-                    </div>
-                    <div>
-                        <input
-                            type="radio"
-                            id="vnpay"
-                            name="paymentMethod"
-                            value="vnpay"
-                            checked={paymentMethod === 'vnpay'}
-                            onChange={() => setPaymentMethod('vnpay')}
-                        />
-                        <label htmlFor="vnpay">Thanh toán qua VNPAY</label>
-                    </div>
+                  <input
+                    type="radio"
+                    id="cod"
+                    name="paymentMethod"
+                    value="cod"
+                    checked={paymentMethod === 'cod'}
+                    onChange={() => setPaymentMethod('cod')}
+                  />
+                  <label htmlFor="cod">Thanh toán khi nhận hàng</label>
                 </div>
+                <div>
+                  <input
+                    type="radio"
+                    id="vnpay"
+                    name="paymentMethod"
+                    value="vnpay"
+                    checked={paymentMethod === 'vnpay'}
+                    onChange={() => setPaymentMethod('vnpay')}
+                  />
+                  <label htmlFor="vnpay">Thanh toán qua VNPAY</label>
+                </div>
+              </div>
             </div>
           </div>
 
