@@ -158,6 +158,7 @@ spec:
                                                 -Dsonar.projectKey=smash-shop-frontend-project \
                                                 -Dsonar.sources=. \
                                                 -Dsonar.host.url=http://192.168.13.128:31000/ \
+												-Dsonar.login=$SONAR_AUTH_TOKEN
                                             """
                                         }
                                     }
