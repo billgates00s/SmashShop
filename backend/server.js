@@ -43,7 +43,8 @@ const io = new Server(httpServer, {
             "http://192.168.88.133:30002",
             "https://192.168.88.133",
             "http://localhost:3000",
-            "http://192.168.88.1:3000"
+            "http://192.168.88.1:3000",
+			"http://192.168.13.128:30002"
         ],
         methods: ["GET", "POST"],
         credentials: true
@@ -82,7 +83,8 @@ app.use(cors({
         "http://192.168.88.133:30002",
         "https://192.168.88.133",
         "http://localhost:3000",
-        "http://192.168.88.1:3000"
+        "http://192.168.88.1:3000",
+		"http://192.168.13.128:30002"
     ],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     credentials: true,
@@ -113,6 +115,6 @@ app.use('*', (req, res) => {
 import logger from "./utils/logger.js";
 
 // Dùng httpServer thay cho app.listen để Socket.io hoạt động
-httpServer.listen(PORT, () => logger.info(`Server started at http://192.168.88.133:${PORT}`));
+httpServer.listen(PORT, () => logger.info(`Server started at http://192.168.13.128:${PORT}`));
 
 export default app;
