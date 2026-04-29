@@ -2,7 +2,9 @@ import express from "express";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import cors from "cors";
-import connectDB from "./config/database.js"; // Import file kết nối MongoDB
+import { createServer } from "http";
+import { Server } from "socket.io";
+import connectDB from "./config/database.js";
 import userRoutes from "./routes/user.route.js";
 import Authrouter from "./routes/auth.route.js";
 import session from 'express-session';
@@ -19,35 +21,71 @@ import cookieParser from 'cookie-parser';
 import cartRouter from "./routes/cart.route.js";
 import dashboardRouter from "./routes/dashboard.route.js";
 import paymentRoutes from "./routes/payment.route.js";
+import initChatSocket from "./socket/chatSocket.js";
 
 dotenv.config();
 
 const PORT = process.env.PORT || 5001;
 const FRONTEND_URL = process.env.FRONTEND_URL || "";
-const FRONTEND_URL_VERCEL = process.env.FRONTEND_URL_VERCEL || "";
+const FRONTEND_URL_VERCEL = process.env.FRONTEND_URL_VERCEL || "https://ie-213.vercel.app";
 connectDB();
 
 const app = express();
-app.use(express.json()); // Quan trọng để đọc dữ liệu JSON từ request
+
+// Tạo HTTP server để dùng cả Express lẫn Socket.io
+const httpServer = createServer(app);
+
+// Cấu hình Socket.io
+const io = new Server(httpServer, {
+    cors: {
+        origin: [
+            "https://192.168.88.133:30443",
+            "http://192.168.88.133:30002",
+            "https://192.168.88.133",
+            "http://localhost:3000",
+            "http://192.168.88.1:3000"
+        ],
+        methods: ["GET", "POST"],
+        credentials: true
+    }
+});
+
+// Khởi tạo chat socket
+initChatSocket(io);
+
+// --- CẤU HÌNH QUAN TRỌNG KHI CHẠY SAU NGINX/K8S ---
+app.set("trust proxy", 1);
+
+app.use(express.json());
 app.use(cookieParser());
 
 app.use(
     session({
-        secret: "a9b8c7d6e5f4g3h2i1", // Khóa bí mật để mã hóa session
+        secret: process.env.SESSION_SECRET,
         resave: false,
-        saveUninitialized: true,
-        cookie: { secure: false }, // false nếu không dùng HTTPS
+        saveUninitialized: false,
+        cookie: {
+            secure: true,
+            sameSite: "none",
+            maxAge: 24 * 60 * 60 * 1000
+        },
     })
 );
-// Cấu hình session
+
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Middleware
+// --- CẤU HÌNH CORS CHI TIẾT ---
 app.use(cors({
-    origin: ["https://192.168.13.128:30444", "http://192.168.13.128:30002"], // KHÔNG được dùng '*'
+    origin: [
+        "https://192.168.88.133:30443",
+        "http://192.168.88.133:30002",
+        "https://192.168.88.133",
+        "http://localhost:3000",
+        "http://192.168.88.1:3000"
+    ],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    credentials: true, // Cho phép gửi cookie/session
+    credentials: true,
     allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
@@ -65,27 +103,16 @@ app.use('/api/auth', Authrouter);
 app.use('/api/v1/cart', cartRouter);
 app.use('/api/v1/dashboard', dashboardRouter);
 app.use('/api/v1/vnpay', paymentRoutes);
-// Route đăng nhập Google
-app.get('/api/auth/google',
-    passport.authenticate("google", { scope: ["openid", "profile", "email"] })
 
-);
+import { generateToken } from "./middleware/jwt.js";
 
-// Route callback từ Google
-app.get('/api/auth/google/callback',
-    passport.authenticate('google', { failureRedirect: '/' }),
-    (req, res) => {
-        res.send(`🚀 Đăng nhập thành công! Chào ${req.user.displayName}`);
-    }
-);
-
-
-// Cấu hình các Routes còn lại 
 app.use('*', (req, res) => {
     res.status(404).json({ error: "not found" })
 });
 
+import logger from "./utils/logger.js";
 
-app.listen(PORT, '0.0.0.0', () => console.log(`Server started and listening on port ${PORT}`));
+// Dùng httpServer thay cho app.listen để Socket.io hoạt động
+httpServer.listen(PORT, () => logger.info(`Server started at http://192.168.88.133:${PORT}`));
 
 export default app;

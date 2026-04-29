@@ -16,10 +16,17 @@ const UserSchema = new mongoose.Schema({
     passwordResetToken: { type: String },
     passwordResetExpires: { type: Date },
     count_type_cart: {type: Number},
+    gender: { type: String },
+    dob: { type: Date },
+    address: { type: String },
+    avatar: { type: String },
 });
 
-// Băm mật khẩu trước khi lưu
+// Cập nhật trường update_at và băm mật khẩu trước khi lưu
 UserSchema.pre("save", async function (next) {
+    if (!this.isNew && this.isModified()) {
+        this.update_at = Date.now();
+    }
     if (!this.isModified("password")) return next();
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);

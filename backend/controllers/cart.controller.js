@@ -1,27 +1,48 @@
 import User from '../models/user.model.js';
 import Cart from '../models/cart.model.js';
+import Product from '../models/product.model.js'; // Added Product import
 import mongoose from 'mongoose';
 import ProductImage from '../models/productImage.model.js';
+import { v4 as uuidv4 } from 'uuid'; // Added uuid import
 
 //thêm/giảm sản phẩm trong giỏ hàng
 export const addCart = async (req, res) => {
     //Lấy user_id
     const user_id = req.user._id;
-    const {product_id,quantity} = req.body;
+    const { product_id, quantity } = req.body;
+    
+    // Fetch product details
+    const productData = await Product.findById(product_id);
+    if (!productData) {
+        return res.status(404).json({ success: false, message: "Product not found" });
+    }
+
+    const price = productData.price;
+    const product_name = productData.prod_name;
+    const subtotal = price * quantity;
+
     //Lấy cart của user
     const productObjectId = new mongoose.Types.ObjectId(product_id);
-    const cart_user = await Cart.findOne({user_id: user_id});
+    const cart_user = await Cart.findOne({ user_id: user_id });
+    
     //Nếu chưa có cart thì tạo mới cart
     if (!cart_user) {
         const newCart = new Cart({
+            cart_id: uuidv4(),
             user_id: user_id,
-            cart: [{ product: product_id, quantity }],
-            count_cart: quantity,          // khởi tạo luôn số lượng
+            cart: [{ 
+                product: product_id, 
+                product_name, 
+                price, 
+                quantity, 
+                subtotal 
+            }],
+            count_cart: quantity,
         });
         await newCart.save();
 
         return res.status(200).json({
-            success: true, 
+            success: true,
             message: "Create new cart",
         });
     }
@@ -58,9 +79,7 @@ export const addCart = async (req, res) => {
         // console.log("ok1");
         // Nếu không có sản phẩm thì thêm mới sản phẩm vào giỏ hàng
         if (!product_in_cart) {
-            // console.log("ok1");
             if (quantity < 0) {
-                // console.log("ok2");
                 return res.status(200).json({
                     success: true, 
                     message: "No product to delete",
@@ -70,13 +89,20 @@ export const addCart = async (req, res) => {
                 { user_id: user_id },
                 {
                     $push: {
-                        cart: { product: product_id, quantity: quantity }
+                        cart: { 
+                            product: product_id, 
+                            product_name, 
+                            price, 
+                            quantity, 
+                            subtotal 
+                        }
                     },
                     $inc: {
                         count_cart: quantity 
                     },
+                    $set: { updatedAt: new Date() }
                 },
-                {new : true}
+                { new: true }
             );
             return res.status(200).json({
                 success: true, 
@@ -108,7 +134,13 @@ export const addCart = async (req, res) => {
         const found = await Cart.findOne({ user_id: new mongoose.Types.ObjectId(user_id), 'cart.product': productObjectId });
         const up = await Cart.findOneAndUpdate(
             { user_id, 'cart.product': product_id },
-            { $inc: { 'cart.$.quantity': quantity } },
+            { 
+                $inc: { 'cart.$.quantity': quantity },
+                $set: { 
+                    'cart.$.subtotal': (product_in_cart.quantity + quantity) * price,
+                    updatedAt: new Date()
+                }
+            },
             { new: true }    
         );
         // console.log(up);
@@ -137,7 +169,8 @@ export const deleteCart = async (req, res) => {
         //Xóa sản phẩm trong cart của User
         // 1. Tìm user để lấy quantity của sản phẩm bị xóa
         const cart_user = await Cart.findOne({user_id: user_id});
-        const cartItem = await cart_user.cart.find(item => item.product.toString() === product_id.toString());
+        if (!cart_user) throw new Error('Giỏ hàng không tồn tại');
+        const cartItem = cart_user.cart.find(item => item.product?.toString() === product_id.toString());
         // console.log(cartItem);
         if (!cartItem) {
             throw new Error('Sản phẩm không tồn tại trong giỏ hàng');
@@ -199,45 +232,83 @@ export const getCart = async (req, res) => {
 //thay đổi số lượng sản phẩm trong giỏ hàng
 export const changeCart = async (req, res) => {
     //Lấy userid từ token
-    // console.log(req.user._id)
     const user_id = req.user._id;
-    // console.log(user_id);
-    const {product_id,quantity} = req.body;
+    const body = req.body;
+
     try {
         //Tìm cart của user
-        const cart_user = await Cart.findOne({user_id: user_id});
+        const cart_user = await Cart.findOne({ user_id: user_id });
         //Nếu không có cart thì trả về lỗi
         if (!cart_user) {
             return res.status(404).json({
-                success: false, 
+                success: false,
                 message: "Cart not found",
             });
         }
-        //Tìm sản phẩm trong cart
-        const product_in_cart = await cart_user.cart.find(item => item.product.toString() === product_id.toString());
+
+        // Trường hợp cập nhật hàng loạt (Array)
+        if (Array.isArray(body)) {
+            for (const item of body) {
+                const product_id = item.product?._id || item.product_id || item.product;
+                const quantity = item.quantity;
+
+                if (product_id) {
+                    const product_in_cart = cart_user.cart.find(c => c.product?.toString() === product_id.toString());
+                    if (product_in_cart) {
+                        product_in_cart.quantity = quantity;
+                        product_in_cart.subtotal = (product_in_cart.price || 0) * quantity;
+                    }
+                }
+            }
+            cart_user.updatedAt = new Date();
+            await cart_user.save();
+            return res.status(200).json({
+                success: true,
+                message: "Bulk cart items updated",
+                data: cart_user.cart
+            });
+        }
+
+        // Trường hợp cập nhật 1 item (Object)
+        const { product_id, quantity } = body;
+
+        // Guard: product_id phải tồn tại
+        if (!product_id) {
+            return res.status(400).json({ success: false, message: "product_id is required" });
+        }
+
+        //Tìm sản phẩm trong cart (dùng optional chaining tránh crash khi item.product là null)
+        const product_in_cart = cart_user.cart.find(item => item.product?.toString() === product_id.toString());
         //Nếu không có sản phẩm thì trả về lỗi
         if (!product_in_cart) {
             return res.status(404).json({
-                success: false, 
+                success: false,
                 message: "Product not found in cart",
             });
         }
         //Nếu có sản phẩm thì thay đổi số lượng sản phẩm
+        const price = product_in_cart.price || 0; // Use stored price or handle if missing
         await Cart.updateOne(
             { user_id: user_id, 'cart.product': product_id },
-            { $set: { 'cart.$.quantity': quantity } },
-            { new: true }    // hoặc returnDocument: 'after' với Mongoose >=6
+            {
+                $set: {
+                    'cart.$.quantity': quantity,
+                    'cart.$.subtotal': price * quantity,
+                    updatedAt: new Date()
+                }
+            },
+            { new: true }
         );
-        res.status(201).json({
-            success: true, 
-            message: "Product quantity have change", 
+        res.status(200).json({
+            success: true,
+            message: "Product quantity have change",
             data: {
                 product_id: product_id,
                 quantity: quantity,
             }
-            });    
+        });
     } catch (e) {
         console.error("Error in change cart:", e.message);
-        res.status(500).json({success: false, message: "Server Error"});
+        res.status(500).json({ success: false, message: "Server Error" });
     }
 }
